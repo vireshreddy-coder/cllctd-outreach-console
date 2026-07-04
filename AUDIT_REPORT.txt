@@ -1,0 +1,14 @@
+cllctd outreach build pack audit
+
+Scope:
+- Generated build pack files only.
+- Checked against restricted outbound language from the project handoff.
+- Checked for old v1 framing.
+- Checked for disallowed public contact aliases.
+- Checked for supply-side wording mistakes.
+
+Result:
+PASS. No matches in generated public or outbound-facing files.
+
+Note:
+The hard linter is designed to load the sensitive restricted term list from env so those terms are not committed to the repo.
