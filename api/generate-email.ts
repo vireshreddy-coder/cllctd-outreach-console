@@ -3,7 +3,7 @@ import { requireOutreachUser } from './_auth';
 import { buildOutreachPrompt } from '../src/lib/outreachPrompt';
 import { lintOutreachEmail } from '../src/lib/outreachLint';
 
-const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -13,7 +13,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const auth = await requireOutreachUser(req, res);
   if (!auth) return;
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Missing server API key' });
   }
@@ -34,18 +34,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const prompt = buildOutreachPrompt({ buyerName, category, context, assets, sampleLink, cta, signoff });
 
-  const upstream = await fetch(ANTHROPIC_URL, {
+  const upstream = await fetch(OPENAI_URL, {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({
-      model: process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-5',
+      model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
       max_tokens: 450,
       temperature: 0.4,
-      messages: [{ role: 'user', content: prompt }],
+      messages: [
+        {
+          role: 'system',
+          content: 'You write only compliant cllctd outreach email bodies. Return plain text only.',
+        },
+        { role: 'user', content: prompt },
+      ],
     }),
   });
 
@@ -55,7 +60,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const json = await upstream.json();
-  const body = json?.content?.[0]?.text?.trim() || '';
+  const body = json?.choices?.[0]?.message?.content?.trim() || '';
   const subject = `cllctd data for ${buyerName}`;
   const lint = lintOutreachEmail({ subject, body });
 

@@ -62,7 +62,7 @@ API endpoints:
 - `POST /api/verify-email` can be a stub in Stage 1 if keys are not present.
 
 Draft generation:
-- Use Anthropic via server env only.
+- Use OpenAI via server env only.
 - The client sends target, sender, sample link, asset summary, and CTA.
 - The server returns subject and body.
 - Every returned draft is immediately linted before display.
