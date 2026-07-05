@@ -1,0 +1,12 @@
+{
+  "rewrites": [
+    {
+      "source": "/outreach",
+      "destination": "/"
+    },
+    {
+      "source": "/outreach/:path*",
+      "destination": "/"
+    }
+  ]
+}

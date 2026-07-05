@@ -8,3 +8,5 @@ work/
 npm-debug.log*
 vercel/
 .vercel/
+.vercel
+.env*.local
