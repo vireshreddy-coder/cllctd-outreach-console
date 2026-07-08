@@ -138,7 +138,15 @@ async function apiPost<T>(path: string, session: Session, payload: unknown): Pro
     body: JSON.stringify(payload),
   });
   const json = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(json.error || 'Request failed');
+  if (!response.ok) {
+    const detail =
+      typeof json.detail === 'string'
+        ? json.detail
+        : typeof json.message === 'string'
+          ? json.message
+          : '';
+    throw new Error([json.error || 'Request failed', detail].filter(Boolean).join(': '));
+  }
   return json as T;
 }
 

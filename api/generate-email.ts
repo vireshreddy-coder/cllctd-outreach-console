@@ -56,7 +56,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (!upstream.ok) {
     const text = await upstream.text();
-    return res.status(upstream.status).json({ error: 'Draft generation failed', detail: text.slice(0, 500) });
+    let detail = text.slice(0, 500);
+    try {
+      const parsed = JSON.parse(text);
+      detail = parsed?.error?.message || detail;
+    } catch {
+      // Keep the upstream text if OpenAI returns a non-JSON error.
+    }
+    console.error('Draft generation failed', { status: upstream.status, detail });
+    return res.status(upstream.status).json({ error: 'Draft generation failed', detail });
   }
 
   const json = await upstream.json();
