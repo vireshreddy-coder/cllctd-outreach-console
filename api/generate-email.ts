@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireOutreachUser } from './_auth';
-import { buildOutreachPrompt } from '../src/lib/outreachPrompt';
-import { lintOutreachEmail } from '../src/lib/outreachLint';
+import { requireOutreachUser } from './_auth.js';
+import { buildOutreachPrompt } from '../src/lib/outreachPrompt.js';
+import { lintOutreachEmail } from '../src/lib/outreachLint.js';
 
 const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
 

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { requireOutreachUser } from './_auth';
-import { lintOutreachEmail } from '../src/lib/outreachLint';
+import { requireOutreachUser } from './_auth.js';
+import { lintOutreachEmail } from '../src/lib/outreachLint.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
