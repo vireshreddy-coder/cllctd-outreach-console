@@ -177,15 +177,18 @@ function App() {
   useEffect(() => {
     async function initSession() {
       const params = new URLSearchParams(window.location.search);
+      const callbackError = params.get('error_description') || params.get('error');
+      if (callbackError) {
+        setNotice(`OAuth failed: ${callbackError}`);
+        window.history.replaceState({}, '', '/outreach');
+      }
+
       const code = params.get('code');
       if (code) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error) {
-          setNotice(error.message);
-        } else {
-          setSession(data.session);
-          window.history.replaceState({}, '', '/outreach');
-        }
+        if (error) setNotice(`OAuth callback failed: ${error.message}`);
+        setSession(data.session);
+        window.history.replaceState({}, '', '/outreach');
         setAuthReady(true);
         return;
       }
@@ -456,6 +459,7 @@ function App() {
           <div className="kicker">cllctd / outreach</div>
           <h1>Physical AI buyer console</h1>
           <p>Google auth is required. Access is limited to the cllctd founder accounts.</p>
+          {notice && <p className="auth-error">{notice}</p>}
           <button className="primary" onClick={signIn}>
             <ShieldCheck size={16} /> Sign in with Google
           </button>

@@ -126,6 +126,14 @@ h2 {
   line-height: 1.5;
 }
 
+.auth-error {
+  background: rgba(224, 80, 48, 0.08);
+  border: 1px solid rgba(224, 80, 48, 0.35);
+  border-radius: 6px;
+  color: #ffb0a0 !important;
+  padding: 10px 12px;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 230px minmax(890px, 1fr);
