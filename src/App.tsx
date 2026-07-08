@@ -175,10 +175,27 @@ function App() {
   const lintPassed = Boolean(lint?.passed);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    async function initSession() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (code) {
+        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) {
+          setNotice(error.message);
+        } else {
+          setSession(data.session);
+          window.history.replaceState({}, '', '/outreach');
+        }
+        setAuthReady(true);
+        return;
+      }
+
+      const { data } = await supabase.auth.getSession();
       setSession(data.session);
       setAuthReady(true);
-    });
+    }
+
+    initSession();
     const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setAuthReady(true);
@@ -188,7 +205,7 @@ function App() {
 
   useEffect(() => {
     if (window.location.pathname !== '/outreach') {
-      window.history.replaceState({}, '', '/outreach');
+      window.history.replaceState({}, '', `/outreach${window.location.search}${window.location.hash}`);
     }
   }, []);
 
