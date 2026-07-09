@@ -25,7 +25,7 @@ function getRestrictedTerms(): string[] {
   return raw
     .split('|')
     .map((x) => x.trim())
-    .filter(Boolean);
+    .filter((term) => Boolean(term) && term !== '-');
 }
 
 function escapeRegExp(value: string) {

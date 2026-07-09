@@ -24,7 +24,7 @@ const terms = [
   .join('|')
   .split('|')
   .map((term) => term.trim())
-  .filter(Boolean);
+  .filter((term) => Boolean(term) && term !== '-');
 
 const escaped = terms.map((term) => term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
 const result = spawnSync(
