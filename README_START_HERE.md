@@ -13,7 +13,7 @@ Assumptions I am making:
 What is included:
 - `docs/CODEX_PROMPT_OUTREACH_STAGE1.md`: paste into Codex.
 - `supabase/001_outreach_schema.sql`: tables, RLS, allowlist, indexes.
-- `api/generate-email.ts`: Vercel endpoint skeleton for compliant draft generation.
+- `api/generate-email.ts`: Vercel endpoint for billing-free compliant draft generation.
 - `api/lint-email.ts`: hard-fail pre-send linter endpoint.
 - `src/lib/outreachPrompt.ts`: prompt builder.
 - `src/lib/outreachLint.ts`: shared lint logic.

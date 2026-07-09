@@ -1,9 +1,51 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { requireOutreachUser } from './_auth.js';
-import { buildOutreachPrompt } from '../src/lib/outreachPrompt.js';
 import { lintOutreachEmail } from '../src/lib/outreachLint.js';
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+type DraftInput = {
+  buyerName: string;
+  category: string;
+  assets: string;
+  sampleLink?: string;
+  cta: string;
+  signoff: string;
+};
+
+function cleanSentence(value: unknown, fallback: string) {
+  const text = String(value || '')
+    .replace(/\s+/g, ' ')
+    .replace(/[“”]/g, '"')
+    .replace(/[‘’]/g, "'")
+    .trim();
+  return (text || fallback).replace(/[.!?]+$/g, '');
+}
+
+function buyerGreeting(name: string) {
+  const clean = cleanSentence(name, 'there');
+  return `${clean} team`;
+}
+
+function buildTemplateDraft(input: DraftInput) {
+  const category = cleanSentence(input.category, 'physical AI teams').toLowerCase();
+  const assets = cleanSentence(
+    input.assets,
+    'rights-cleared first-person task video from contributor-captured real-world work',
+  );
+  const sample = cleanSentence(input.sampleLink, 'sample reel available on request').toLowerCase();
+
+  return [
+    `Hey ${buyerGreeting(input.buyerName)},`,
+    '',
+    `cllctd has rights-cleared first-person task video for ${category}.`,
+    `The current cut covers ${assets}.`,
+    'Each package is contributor-captured, reviewed, and prepared for commercial AI training use.',
+    `We can share a ${sample} if useful.`,
+    '',
+    input.cta,
+    '',
+    input.signoff,
+  ].join('\n');
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -12,11 +54,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const auth = await requireOutreachUser(req, res);
   if (!auth) return;
-
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
-    return res.status(500).json({ error: 'Missing server API key' });
-  }
 
   const {
     buyerName,
@@ -32,43 +69,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(400).json({ error: 'Missing required draft inputs' });
   }
 
-  const prompt = buildOutreachPrompt({ buyerName, category, context, assets, sampleLink, cta, signoff });
-
-  const upstream = await fetch(OPENAI_URL, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      authorization: `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({
-      model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
-      max_tokens: 450,
-      temperature: 0.4,
-      messages: [
-        {
-          role: 'system',
-          content: 'You write only compliant cllctd outreach email bodies. Return plain text only.',
-        },
-        { role: 'user', content: prompt },
-      ],
-    }),
-  });
-
-  if (!upstream.ok) {
-    const text = await upstream.text();
-    let detail = text.slice(0, 500);
-    try {
-      const parsed = JSON.parse(text);
-      detail = parsed?.error?.message || detail;
-    } catch {
-      // Keep the upstream text if OpenAI returns a non-JSON error.
-    }
-    console.error('Draft generation failed', { status: upstream.status, detail });
-    return res.status(upstream.status).json({ error: 'Draft generation failed', detail });
-  }
-
-  const json = await upstream.json();
-  const body = json?.choices?.[0]?.message?.content?.trim() || '';
+  const body = buildTemplateDraft({ buyerName, category, assets, sampleLink, cta, signoff });
   const subject = `cllctd data for ${buyerName}`;
   const lint = lintOutreachEmail({ subject, body });
 
